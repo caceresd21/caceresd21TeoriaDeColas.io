@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cola Unicanal Población Infinita</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>COLA UNICANAL Y POBLACION INFINITA (M/M/1 : FIFO/∞/∞)</h1>
+
+    <div class="form-container">
+        <label for="Tllegada">Tasa de llegada (λ):</label>
+        <input type="number" id="Tllegada" placeholder="Ingrese la Tasa de Llegada">
+        <select id="periodoTllegada">
+            <option value="hora">clientes/hora</option>
+            <option value="minuto">clientes/minuto</option>
+        </select>
+
+        <label for="Tservicio">Tasa de servicio (μ):</label>
+        <input type="number" id="Tservicio" placeholder="Ingrese la Tasa de Servicio">
+        <select id="periodoTservicio">
+            <option value="hora">clientes/hora</option>
+            <option value="minuto">clientes/minuto</option>
+        </select>
+        
+        <label for="Nclientes">Clientes (n):</label>
+        <input type="number" id="Nclientes" placeholder="Ingrese la Cantidad de Clientes en el Sistema">
+
+        <button onclick="calcular()">Calcular</button>
+    
+        <div id="resultado" class="resultado">
+            <!-- Los resultados se mostrarán aquí -->
+        </div>
+
+
+        <button onclick="location.href='index.html'" style="margin-top: 10px;">Volver al Menú Principal</button>
+    </div>
+
+    <script>
+        function calcular() {
+            let λ = parseFloat(document.getElementById('Tllegada').value);
+            let μ = parseFloat(document.getElementById('Tservicio').value);
+            let n = parseFloat(document.getElementById('Nclientes').value);
+
+            let periodoTllegada = document.getElementById('periodoTllegada').value;
+            let periodoTservicio = document.getElementById('periodoTservicio').value;
+
+            // Validar entradas numéricas
+            if (isNaN(λ) || isNaN(μ) || isNaN(n)) {
+                alert("Por favor, ingrese todos los valores numéricos.");
+                return;
+            }
+
+            // Convertir Tasa de Llegada a hora si está en minutos
+            if (periodoTllegada === "minuto") {
+                λ /= 60;
+            }
+
+            // Convertir Tasa de Servicio a hora si está en minutos
+            if (periodoTservicio === "minuto") {
+                μ /= 60;
+            }
+
+            // Cálculos
+            let ρ = (λ/μ).toFixed(3); // Factor de utilizacion
+            let psv = (1-(λ/μ)).toFixed(3); // Probabilidad de encontrar el sistema vacío
+            let pn = ((Math.pow((λ / μ),n)) * psv).toFixed(4); // Probabilidad de encontrar n clientes en el sistema
+            let lq = ((Math.pow(λ, 2)) / (μ * (μ - λ))).toFixed(2); // Número esperado de clientes en la cola
+            let l = (λ/(μ - λ)).toFixed(2); // Número esperado de clientes en el sistema
+            let wq = (λ/(μ *(μ - λ))).toFixed(3); // Número esperado de clientes en el sistema
+            let w = (1/(μ - λ)).toFixed(3); // Número esperado de clientes en el sistema
+
+            // Convertir a porcentajes
+            let porcentajep = (ρ * 100).toFixed(2);
+            let porcentajepsv = (psv * 100).toFixed(2);
+            let porcentajepn = (pn * 100).toFixed(2);
+
+            // Convertir a minuto la hora
+            let minutowq = (wq * 60).toFixed(2);
+            let minutow = Math.round((w * 60));
+            
+            // Mostrar resultados
+            document.getElementById('resultado').innerHTML = `
+                <p>Factor de utilización:  <br> 
+                    <mark> ρ = ${ρ}  =>  ${porcentajep} % </mark></p>
+                <p>Probabilidad de encontrar el sistema vacío:  <br> 
+                    <mark> P<sub>o</sub> = ${psv}  =>  ${porcentajepsv} % </mark></p>
+                <p>Probabilidad de encontrar ${n} clientes en el sistema:  <br> 
+                    <mark> P<sub>${n}</sub> = ${pn}  =>  ${porcentajepn} % </mark></p>
+                <p>Número esperado de clientes en la cola: <br> 
+                    <mark> L<sub>q</sub> = ${lq} clientes </mark></p>
+                <p>Número esperado de clientes en el sistema: <br> 
+                    <mark> L = ${l} clientes </mark></p>
+                <p>Tiempo esperado en la cola: <br> 
+                    <mark> W<sub>q</sub> = ${wq} horas   =>  ${minutowq} minutos</mark></p>
+                <p>Tiempo esperado en el sistema: <br> 
+                    <mark> W = ${w} horas   =>  ${minutow} minutos</mark></p>
+            `;
+        }
+    </script>
+</body>
+</html>

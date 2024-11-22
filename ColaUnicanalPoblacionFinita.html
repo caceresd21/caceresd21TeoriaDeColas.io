@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cola Unicanal Población Finita</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <h1>COLA UNICANAL Y POBLACION FINITA (M/M/1 : FIFO/N/N)</h1>
+
+    <div class="form-container">
+        <label for="Tllegada">Tasa de llegada (λ):</label>
+        <input type="number" id="Tllegada" placeholder="Ingrese la Tasa de Llegada" />
+        <select id="periodoTllegada">
+            <option value="año">servicios/año</option>
+            <option value="mes">servicios/mes</option>
+        </select>
+
+        <label for="Tservicio">Tasa de servicio (μ):</label>
+        <input type="number" id="Tservicio" placeholder="Ingrese la Tasa de Servicio" />
+        <select id="periodoTservicio">
+            <option value="año">servicios/año</option>
+            <option value="mes">servicios/mes</option>
+        </select>
+
+        <label for="Mclientes">Total de Clientes (m):</label>
+        <input type="number" id="Mclientes" placeholder="Ingrese el Número Total de Clientes" />
+
+        <label for="Nclientes">Encontrar Clientes en el Sistema (n):</label>
+        <input type="number" id="Nclientes" placeholder="Ingrese el Número de Clientes a Encontrar en el Sistema" />
+
+        <button onclick="calcular()">Calcular</button>
+
+        <div id="resultado" class="resultado">
+            <!-- Los resultados se mostrarán aquí -->
+        </div>
+
+        <button onclick="location.href='index.html'" style="margin-top: 10px">
+            Volver al Menú Principal
+        </button>
+    </div>
+
+    <script>
+        function calcular() {
+            let λ = parseFloat(document.getElementById("Tllegada").value);
+            let μ = parseFloat(document.getElementById("Tservicio").value);
+            let m = parseInt(document.getElementById("Mclientes").value);
+            let n = parseInt(document.getElementById("Nclientes").value);
+
+            let periodoTllegada = document.getElementById("periodoTllegada").value;
+            let periodoTservicio =
+                document.getElementById("periodoTservicio").value;
+
+            // Validar entradas numéricas
+            if (isNaN(λ) || isNaN(μ) || isNaN(m) || isNaN(n)) {
+                alert(
+                    "Por favor, ingrese todos los valores numéricos"
+                );
+                return;
+            }
+
+            // Convertir tasas a hora si están en minutos
+            if (periodoTllegada === "mes") λ *= 12;
+            if (periodoTservicio === "mes") μ *= 12;
+
+            // Cálculos
+            // Calcular el término de la sumatoria
+            let sumatoria = 0;
+            for (let n = 0; n <= m; n++) {
+                let d1 = factorial(m) / factorial(m - n); // m!/(m-n)!
+                let d2 = Math.pow(λ / μ, n); // (λ/μ)^n
+                sumatoria += d1 * d2;
+            }
+            let psv = 1 / sumatoria;  // Probabilidad de que el sistema esté vacío
+            let pm = (factorial(m) / (factorial(m - n))) * Math.pow(λ / μ, n) * psv;  // Probabilidad de encontrar m clientes en el sistema
+            let lq = m - ((λ+μ)/λ) * (1-psv); // Numero esperado de clientes en la cola
+            let l = lq + (1 - psv); // Numero esperado de clientes en el sistema
+            let wq = l / ((μ*(1-psv))); // Tiempo esperado en un cliente en la cola
+            let w = wq + (1/μ); // Tiempo esperado en un cliente en el sistema
+            
+            // Convertir a porcentaje
+            let porcentajepsv = psv * 100;
+            let porcentajepm = pm * 100;
+
+            // Convertir de años a dias
+            let diawq = Math.round(wq * 365);
+            let diaw = Math.round(w * 365);
+
+            // Mostrar resultados
+            document.getElementById("resultado").innerHTML = `
+            <p>Probabilidad de que el sistema esté vacío:<br>
+                <mark>P<sub>o</sub> = ${psv.toFixed(4)} => ${porcentajepsv.toFixed(2)} %</mark></p>
+            <p>Probabilidad de encontrar ${n} clientes en el sistema:<br>
+                <mark>P<sub>${n}</sub> = ${pm.toFixed(4)} => ${porcentajepm.toFixed(2)} %</mark></p>
+            <p>Número esperado de clientes en la cola:<br>
+                <mark>L<sub>q</sub> = ${lq.toFixed(2)} Clientes </mark></p>
+            <p>Número esperado de clientes en el sistema:<br>
+                <mark>L = ${l.toFixed(4)} Clientes </mark></p>
+            <p>Tiempo esperado de un cliente en la cola:<br>
+                <mark>W<sub>q</sub> = ${wq.toFixed(4)} año => ${diawq} días </mark></p>
+            <p>Tiempo esperado de un cliente en el sistema:<br>
+                <mark>W = ${w.toFixed(4)} años => ${diaw} días </mark></p>
+            `;
+        }
+
+        // Función para calcular factorial
+        function factorial(n) {
+            if (n === 0 || n === 1) return 1;
+            let resultado = 1;
+            for (let i = 2; i <= n; i++) {
+                resultado *= i;
+            }
+            return resultado;
+        }
+    </script>
+</body>
+</html>

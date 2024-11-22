@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cola Multicanal Población Infinita</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h1>COLA MULTICANAL Y POBLACION INFINITA (M/M/S : FIFO/∞/∞)</h1>
+
+    <div class="form-container">
+      <label for="Tllegada">Tasa de llegada (λ):</label>
+      <input
+        type="number"
+        id="Tllegada"
+        placeholder="Ingrese la Tasa de Llegada"
+      />
+      <select id="periodoTllegada">
+        <option value="hora">clientes/hora</option>
+        <option value="minuto">clientes/minuto</option>
+      </select>
+
+      <label for="Tservicio">Tasa de servicio (μ):</label>
+      <input
+        type="number"
+        id="Tservicio"
+        placeholder="Ingrese la Tasa de Servicio"
+      />
+      <select id="periodoTservicio">
+        <option value="hora">clientes/hora</option>
+        <option value="minuto">clientes/minuto</option>
+      </select>
+
+      <label for="Kcanales">Canales (k):</label>
+      <input
+        type="number"
+        id="Kcanales"
+        placeholder="Ingrese el Número de Canales"
+      />
+
+      <button onclick="calcular()">Calcular</button>
+
+      <div id="resultado" class="resultado">
+        <!-- Los resultados se mostrarán aquí -->
+      </div>
+
+      <button onclick="location.href='index.html'" style="margin-top: 10px">
+        Volver al Menú Principal
+      </button>
+    </div>
+
+    <script>
+      function calcular() {
+        let λ = parseFloat(document.getElementById("Tllegada").value);
+        let μ = parseFloat(document.getElementById("Tservicio").value);
+        let k = parseInt(document.getElementById("Kcanales").value);
+
+        let periodoTllegada = document.getElementById("periodoTllegada").value;
+        let periodoTservicio = document.getElementById("periodoTservicio").value;
+
+        // Validar entradas numéricas
+        if (isNaN(λ) || isNaN(μ) || isNaN(k) || k <= 0) {
+        alert(
+        "Por favor, ingrese todos los valores numéricos y asegúrese de que los canales (k) sean mayor que 0."
+        );
+        return;
+        }
+
+        // Convertir tasas a hora si están en minutos
+        if (periodoTllegada === "minuto") λ /= 60;
+        if (periodoTservicio === "minuto") μ /= 60;
+
+        // Cálculos
+        // Cálculo del factor de utilización
+        let ρ = (λ / (k * μ)).toFixed(4); // Factor de utilización
+        if (ρ >= 1) {
+        document.getElementById("resultado").innerHTML = `
+            <p style="color: red;">El factor de utilización es mayor o igual a 1 <br> (ρ = ${ρ}).<br>
+            Por favor, aumente el número de canales (k).</p>
+        `;
+          return; // Detener si ρ >= 1
+        }
+        // Cálculo de Probabilidad de que el sistema este vacio
+        let sumatoria = 0;
+        // Primera parte de la sumatoria (n = 0 hasta k-1)
+        for (let n = 0; n < k; n++) {
+        sumatoria += Math.pow(λ / μ, n) / factorial(n);
+        }
+        // Segunda parte (n = k)
+        let segundoTermino = (1/factorial(k)) * Math.pow(λ/μ, k) * ((k*μ)/((k*μ)-λ))
+        let psv = 1 / (sumatoria + segundoTermino);  // Probabilidad de que el sistema esté vacío
+        let pk = (1/factorial(k)) * Math.pow(λ/μ, k) * ((k*μ)/((k*μ)-λ) * psv); // Probabilidad de encontrar k clientes en el sistema
+        let lq = (((λ*μ)*(Math.pow(λ/μ, k)))/((factorial(k-1)) * Math.pow(((k*μ)-λ), 2))) * psv; // Numero esperado de clientes en la cola
+        let l = lq+(λ/μ); // Numero esperado de clientes en el sistema
+        let wq = (((μ)*(Math.pow(λ/μ, k)))/((factorial(k-1)) * Math.pow(((k*μ)-λ), 2))) * psv; // Tiempo esperado de clientes en la cola
+        let w = wq + (1 / μ); // Tiempo esperado de clientes en el sistema
+
+        // Convertir a porcentaje
+        let porcentajep = (ρ * 100).toFixed(2);
+        let porcentajepsv = psv * 100;
+        let porcentajepk = pk * 100;
+
+        // Convertir a minuto la hora
+        let minutowq = (wq * 60).toFixed(2);
+        let minutow = (w * 60).toFixed(2);
+
+        // Mostrar resultados
+        document.getElementById("resultado").innerHTML = `
+        <p>Factor de utilización:<br>
+            <mark>ρ = ${ρ} => ${porcentajep}%</mark></p>
+        <p>Probabilidad de que el sistema esté vacío:<br>
+            <mark>P<sub>o</sub> = ${psv.toFixed(5)} => ${porcentajepsv.toFixed(2)} %</mark></p>
+        <p>Probabilidad de que existan ${k} unidades en el sistema:<br>
+            <mark>P<sub>${k}</sub> = ${pk.toFixed(5)} => ${porcentajepk.toFixed(2)} %</mark></p>
+        <p>Número esperado de clientes en la cola: <br> 
+            <mark> L<sub>q</sub> = ${lq.toFixed(2)} clientes </mark></p>
+        <p>Número esperado de clientes en el sistema: <br> 
+            <mark> L = ${l.toFixed(2)} clientes </mark></p>
+        <p>Tiempo esperado de clientes en la cola: <br> 
+            <mark> W<sub>q</sub> = ${wq.toFixed(4)} horas   =>  ${minutowq} minutos</mark></p>
+        <p>Tiempo esperado de clientes en el sistema: <br> 
+            <mark> W = ${w.toFixed(4)} horas   =>  ${minutow} minutos</mark></p>
+    `;
+    }
+
+      // Función para calcular factorial
+    function factorial(n) {
+        if (n === 0 || n === 1) return 1;
+        let resultado = 1;
+        for (let i = 2; i <= n; i++) {
+          resultado *= i;
+        }
+        return resultado;
+    }
+    </script>
+</body>
+</html>
